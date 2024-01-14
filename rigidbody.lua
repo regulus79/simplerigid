@@ -20,6 +20,8 @@ minetest.register_entity("simplerigid:test",{
     _mass=1,
     _linear_decay=0.9,
     _angular_decay=0.9,
+    _linear_energy_collision_damp=0.5,
+    _angular_energy_collision_damp=0.5,
     on_activate=function(self,staticdata)
         if not self._oldpos then
             self._oldpos=self.object:get_pos()
@@ -116,7 +118,7 @@ minetest.register_entity("simplerigid:test",{
             local amount_of_vel_in_object=-max_collision.overlap/velocity:dot(max_collision.dir)
             local reflected_vel=velocity - 2 * velocity:dot(max_collision.dir)*max_collision.dir
 
-            local old_energy=1/2*self._mass*velocity:length()^2 + 1/2*self._angular_inertia:length()*self._angular_velocity:length()^2
+            local target_energy=1/2*self._mass*velocity:length()^2*self._linear_energy_collision_damp + 1/2*self._angular_inertia:length()*self._angular_velocity:length()^2*self._angular_energy_collision_damp
             --vector reflection equation from https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
             self.object:set_pos(self.object:get_pos()+max_collision.dir*max_overlap*2)
             --self.object:set_velocity(reflected_vel)
@@ -127,10 +129,10 @@ minetest.register_entity("simplerigid:test",{
 
             local new_energy=1/2*self._mass*self.object:get_velocity():length()^2 + 1/2*self._angular_inertia:length()*self._angular_velocity:length()^2
 
-            self.object:set_velocity(self.object:get_velocity()*((old_energy/new_energy)^0.5))
-            self._angular_velocity=self._angular_velocity*((old_energy/new_energy)^0.5)
+            self.object:set_velocity(self.object:get_velocity()*((target_energy/new_energy)^0.5))
+            self._angular_velocity=self._angular_velocity*((target_energy/new_energy)^0.5)
 
-            --minetest.debug(new_energy,old_energy,1/2*self.object:get_velocity():length()^2 + 1/2*self._angular_velocity:length()^2)
+            --minetest.debug(new_energy,target_energy,1/2*self.object:get_velocity():length()^2 + 1/2*self._angular_velocity:length()^2)
         end
     end
 })
